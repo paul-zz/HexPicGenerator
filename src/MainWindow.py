@@ -15,13 +15,13 @@ from PyQt5.QtWidgets import (
     QLabel)
 
 from PIL import Image
-
+from .Core import processImage, pretreatment, numpy2image
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         # Initial settings
-        self.setFixedSize(QSize(300, 500))
+        self.setFixedSize(QSize(600, 500))
         self.setWindowTitle("HexPicGenerator")
         
         # Data
@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         self.hbox_slider = QHBoxLayout()
         self.label_slider = QLabel("阈值")
         self.slider_thresh = QSlider(Qt.Orientation.Horizontal)
+        self.slider_thresh.setValue(128)
         self.slider_thresh.setRange(0, 255)
 
         self.hbox_slider.addWidget(self.label_slider)
@@ -57,6 +58,7 @@ class MainWindow(QMainWindow):
         self.label_text_output = QLabel("输出结果：")
         self.text_output = QTextEdit()
         self.text_output.setReadOnly(True)
+        self.text_output.setFont(QFont("Courier"))
 
         # Add the widgets to the layout
         self.vbox_global.addWidget(self.label_origin_img_caption)
@@ -73,6 +75,8 @@ class MainWindow(QMainWindow):
 
         # Action bindings
         self.button_addpic.clicked.connect(self.onOpenImageClicked)
+        self.button_gen.clicked.connect(self.onGenerateResultClicked)
+        self.slider_thresh.valueChanged.connect(self.sliderValueChanged)
 
     def Image_to_ImageQt(self, image : Image):
         # Need to rewrite the toqpixmap function. Imageqt does not work.
@@ -86,10 +90,9 @@ class MainWindow(QMainWindow):
         return QPixmap.fromImage(qimg)
 
     def refreshImagePreview(self):
-        print("I think the program is running here")
-        image_preview_qpixmap = self.Image_to_ImageQt(self.image)
+        # Refresh the image preview label
+        image_preview_qpixmap = self.Image_to_ImageQt(self.image_processed)
         self.label_origin_img_preview.setPixmap(image_preview_qpixmap.scaledToHeight(self.label_origin_img_preview.height()))
-        
 
     def onOpenImageClicked(self):
         # Add image from local folder to the list
@@ -98,8 +101,17 @@ class MainWindow(QMainWindow):
         for filename in file_names:
             if filename != '':
                 self.image = Image.open(filename)
-                self.image_processed = self.image
+                self.image_processed = numpy2image(pretreatment(self.image, self.slider_thresh.value()))
                 self.refreshImagePreview()
-                
+
+    def onGenerateResultClicked(self):
+        # Generate the results
+        out_str = processImage(self.image, self.slider_thresh.value())
+        self.text_output.setText(out_str)
+    
+    def sliderValueChanged(self):
+        if self.image:
+            self.image_processed = numpy2image(pretreatment(self.image, self.slider_thresh.value()))
+            self.refreshImagePreview()
 
         
