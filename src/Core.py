@@ -2,14 +2,21 @@
 import numpy 
 from PIL import Image
  
-def pretreatment(ima : Image, threshold : int):
+def pretreatment(ima : Image, threshold : int = 128):
     # Generate binary image by setting a threshold
     ima = ima.convert('L') # Convert to grayscale picture
     im = numpy.array(ima) # Convert to numpy array
     im = numpy.where(im > threshold, 0, 1)
     return im
 
-def processImage(ima : Image, threshold : int = 128):
+def numpy2image(im_np : numpy.ndarray, mode='1'):
+    # Convert binaray numpy array to pil image
+    # https://stackoverflow.com/questions/50134468/convert-boolean-numpy-array-to-pillow-image
+    size = im_np.shape[::-1]
+    databytes = numpy.packbits(im_np, axis=1)
+    return Image.frombytes(mode='1', size=size, data=databytes)
+
+def processImage(ima : Image, threshold : int = 128, sep : str = ", ", line_break_num : int = 16):
     # Print the image in the form of bytes
     im = pretreatment(ima, threshold)
     out = []
@@ -24,13 +31,18 @@ def processImage(ima : Image, threshold : int = 128):
                 out.append(int(count_1, 2))
                 count_1=''
     cnt = 0
+    out_str = ""
     for num in out:
         cnt += 1
-        print('0x%02X' % num, end=",")
-        if cnt % 16 == 0:
-            print(" ")
+        out_str += '0x%02X' % num
+        out_str += sep
+        if cnt % line_break_num == 0:
+            out_str+='\n'
+    out_str = out_str.strip()
+    return out_str
 
 if __name__ == '__main__':
     image = Image.open("res/test.png")
-    processImage(image, 128)
+    ret = processImage(image, 128)
+    print(ret)
     
