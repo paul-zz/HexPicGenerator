@@ -2,8 +2,9 @@ import typing
 import io
 
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QFont, QPixmap, QImage
+from PyQt5.QtGui import QFont, QPixmap, QImage, QClipboard
 from PyQt5.QtWidgets import (
+    QApplication,
     QMainWindow, 
     QWidget, 
     QHBoxLayout,
@@ -23,7 +24,7 @@ class MainWindow(QMainWindow):
         # Initial settings
         self.setFixedSize(QSize(600, 500))
         self.setWindowTitle("HexPicGenerator")
-        
+
         # Data
         self.image = None # The original image
         self.image_processed = None # The image to be processed, PIL Image
@@ -76,6 +77,7 @@ class MainWindow(QMainWindow):
         # Action bindings
         self.button_addpic.clicked.connect(self.onOpenImageClicked)
         self.button_gen.clicked.connect(self.onGenerateResultClicked)
+        self.button_copy.clicked.connect(self.onCopyToClipboardClicked)
         self.slider_thresh.valueChanged.connect(self.sliderValueChanged)
 
     def Image_to_ImageQt(self, image : Image):
@@ -108,6 +110,12 @@ class MainWindow(QMainWindow):
         # Generate the results
         out_str = processImage(self.image, self.slider_thresh.value())
         self.text_output.setText(out_str)
+
+    def onCopyToClipboardClicked(self):
+        # Copy the results onto the system clipboard
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self.text_output.toPlainText())
+
     
     def sliderValueChanged(self):
         if self.image:
