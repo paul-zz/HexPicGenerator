@@ -1,7 +1,7 @@
 import typing
 import io
 
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, QSettings
 from PyQt5.QtGui import QFont, QPixmap, QImage, QClipboard
 from PyQt5.QtWidgets import (
     QApplication,
@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
 
 from PIL import Image
 from .Core import processImage, pretreatment, numpy2image
+from .SettingsDialog import SettingWindow
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
@@ -29,19 +30,29 @@ class MainWindow(QMainWindow):
         self.image = None # The original image
         self.image_processed = None # The image to be processed, PIL Image
 
+        # Settings
+        self.settings_obj = None
+        self.line_break = 16
+        self.separator = ""
+        self.front_string = ""
+        self.end_string = ""
+
         self.vbox_global = QVBoxLayout()
 
         # The upper part: an image preview widget
         self.label_origin_img_caption = QLabel("图像预览：")
         self.label_origin_img_preview = QLabel("请打开图像")
         self.label_origin_img_preview.setFixedHeight(200)
+        self.label_origin_img_preview.setAlignment(Qt.AlignCenter)
 
         # The lower part: output and buttons
         self.label_operations = QLabel("操作：")
         self.hbox_button = QHBoxLayout()
         self.button_addpic = QPushButton("打开图像")
+        self.button_settings = QPushButton("更改设置")
         self.button_gen = QPushButton("生成结果")
         self.button_copy = QPushButton("拷贝至剪贴板")
+        
 
         self.hbox_slider = QHBoxLayout()
         self.label_slider = QLabel("阈值")
@@ -53,6 +64,7 @@ class MainWindow(QMainWindow):
         self.hbox_slider.addWidget(self.slider_thresh)
         
         self.hbox_button.addWidget(self.button_addpic)
+        self.hbox_button.addWidget(self.button_settings)
         self.hbox_button.addWidget(self.button_gen)
         self.hbox_button.addWidget(self.button_copy)
 
@@ -76,6 +88,7 @@ class MainWindow(QMainWindow):
 
         # Action bindings
         self.button_addpic.clicked.connect(self.onOpenImageClicked)
+        self.button_settings.clicked.connect(self.onSettingsButtonClicked)
         self.button_gen.clicked.connect(self.onGenerateResultClicked)
         self.button_copy.clicked.connect(self.onCopyToClipboardClicked)
         self.slider_thresh.valueChanged.connect(self.sliderValueChanged)
@@ -106,9 +119,17 @@ class MainWindow(QMainWindow):
                 self.image_processed = numpy2image(pretreatment(self.image, self.slider_thresh.value()))
                 self.refreshImagePreview()
 
+    def onSettingsButtonClicked(self):
+        # Go to settings
+        msg = SettingWindow(self, self.settings_obj)
+        if msg.exec_():
+            self.settings_obj = msg.getSettings()
+            self.applySettings(self.settings_obj)
+
+
     def onGenerateResultClicked(self):
         # Generate the results
-        out_str = processImage(self.image, self.slider_thresh.value())
+        out_str = processImage(self.image, self.slider_thresh.value(), sep=self.separator, line_break_num=self.line_break)
         self.text_output.setText(out_str)
 
     def onCopyToClipboardClicked(self):
@@ -116,10 +137,19 @@ class MainWindow(QMainWindow):
         clipboard = QApplication.clipboard()
         clipboard.setText(self.text_output.toPlainText())
 
-    
     def sliderValueChanged(self):
+        # Refresh the image preview when the value of the slider is changed
         if self.image:
             self.image_processed = numpy2image(pretreatment(self.image, self.slider_thresh.value()))
             self.refreshImagePreview()
+
+    def applySettings(self, settings_obj : QSettings):
+        # Receive a QSettings object and apply
+        self.settings_obj = settings_obj
+        self.line_break = int(settings_obj.value("line_break"))
+        self.separator = settings_obj.value("separator")
+        self.front_string = settings_obj.value("front_string")
+        self.end_string = settings_obj.value("end_string")
+
 
         
