@@ -16,7 +16,12 @@ def numpy2image(im_np : numpy.ndarray, mode='1'):
     databytes = numpy.packbits(im_np, axis=1)
     return Image.frombytes(mode='1', size=size, data=databytes)
 
-def processImage(ima : Image, threshold : int = 128, sep : str = ", ", line_break_num : int = 16):
+def processImage(ima : Image, 
+                 threshold : int = 128, 
+                 sep : str = ", ", 
+                 line_break_num : int = 16,
+                 front_str : str = "",
+                 end_str : str = ""):
     # Print the image in the form of bytes
     im = pretreatment(ima, threshold)
     out = []
@@ -31,14 +36,14 @@ def processImage(ima : Image, threshold : int = 128, sep : str = ", ", line_brea
                 out.append(int(count_1, 2))
                 count_1=''
     cnt = 0
-    out_str = ""
+    out_str = front_str
     for num in out:
         cnt += 1
         out_str += '0x%02X' % num
         out_str += sep
         if cnt % line_break_num == 0:
             out_str+='\n'
-    out_str = out_str.strip()
+    out_str = out_str.strip() + end_str
     return out_str
 
 if __name__ == '__main__':
