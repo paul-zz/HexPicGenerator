@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QTextEdit,
     QFileDialog,
     QSlider,
+    QMessageBox,
     QLabel)
 
 from PIL import Image
@@ -129,8 +130,17 @@ class MainWindow(QMainWindow):
 
     def onGenerateResultClicked(self):
         # Generate the results
-        out_str = processImage(self.image, self.slider_thresh.value(), sep=self.separator, line_break_num=self.line_break)
-        self.text_output.setText(out_str)
+        if self.image:
+            out_str = processImage(self.image, 
+                                self.slider_thresh.value(), 
+                                sep=self.separator, 
+                                line_break_num=self.line_break,
+                                front_str=self.front_string,
+                                end_str=self.end_string)
+            self.text_output.setText(out_str)
+        else:
+            QMessageBox.warning(self, "警告", "没有选择图片")
+        
 
     def onCopyToClipboardClicked(self):
         # Copy the results onto the system clipboard
