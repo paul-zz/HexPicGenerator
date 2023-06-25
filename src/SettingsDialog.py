@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (QDialog,
                              QLineEdit,
                              QVBoxLayout,
                              QFormLayout,
+                             QCheckBox,
                              QApplication
 )
 
@@ -24,20 +25,24 @@ class SettingWindow(QDialog):
         
         # Setting area
         self.layout_settings = QFormLayout()
+        self.label_reverse = "反转显示："
         self.label_line_break = "单行数目："
         self.label_separator = "分隔符："
         self.label_front_str = "前缀文本："
         self.label_end_str = "后缀文本："
+        self.checkbox_reverse = QCheckBox()
         self.spinbox_line_break = QSpinBox()
         self.textedit_separator = QLineEdit()
         self.textedit_front_str = QLineEdit()
         self.textedit_end_str = QLineEdit()
 
+        self.checkbox_reverse.setToolTip("反转二值图像与结果中的黑白显示")
         self.spinbox_line_break.setToolTip("一行显示的项目数")
         self.textedit_separator.setToolTip("输出结果的分隔符，如', '")
         self.textedit_front_str.setToolTip("输出结果的前缀，如'const unsigned char bitmap[]={'")
         self.textedit_end_str.setToolTip("输出后缀的后缀，如'};'")
 
+        self.layout_settings.addRow(self.label_reverse, self.checkbox_reverse)
         self.layout_settings.addRow(self.label_line_break, self.spinbox_line_break)
         self.layout_settings.addRow(self.label_separator, self.textedit_separator)
         self.layout_settings.addRow(self.label_front_str, self.textedit_front_str)
@@ -60,16 +65,19 @@ class SettingWindow(QDialog):
     def readSettings(self, settings_obj : QSettings):
         # Receive a QSettings object and apply
         self.settings_obj = settings_obj
+        reverse = bool(settings_obj.value("reverse"))
         line_break = int(settings_obj.value("line_break"))
         separator = settings_obj.value("separator")
         front_string = settings_obj.value("front_string")
         end_string = settings_obj.value("end_string")
+        self.checkbox_reverse.setChecked(reverse)
         self.spinbox_line_break.setValue(line_break)
         self.textedit_separator.setText(separator)
         self.textedit_front_str.setText(front_string)
         self.textedit_end_str.setText(end_string)
 
     def getSettings(self):
+        self.settings_obj.setValue("reverse", self.checkbox_reverse.isChecked())
         self.settings_obj.setValue("line_break", self.spinbox_line_break.value())
         self.settings_obj.setValue("separator", self.textedit_separator.text())
         self.settings_obj.setValue("front_string", self.textedit_front_str.text())
