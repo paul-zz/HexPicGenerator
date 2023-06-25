@@ -2,11 +2,15 @@
 import numpy 
 from PIL import Image
  
-def pretreatment(ima : Image, threshold : int = 128):
+def pretreatment(ima : Image, 
+                 threshold : int = 128,
+                 reverse : bool = False):
     # Generate binary image by setting a threshold
     ima = ima.convert('L') # Convert to grayscale picture
     im = numpy.array(ima) # Convert to numpy array
     im = numpy.where(im > threshold, 0, 1)
+    if reverse:
+        im = 1 - im
     return im
 
 def numpy2image(im_np : numpy.ndarray, mode='1'):
@@ -21,9 +25,10 @@ def processImage(ima : Image,
                  sep : str = ", ", 
                  line_break_num : int = 16,
                  front_str : str = "",
-                 end_str : str = ""):
+                 end_str : str = "",
+                 reverse : bool = False):
     # Print the image in the form of bytes
-    im = pretreatment(ima, threshold)
+    im = pretreatment(ima, threshold, reverse)
     out = []
     for row in im:
         # Traverse each row in the image

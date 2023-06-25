@@ -33,10 +33,12 @@ class MainWindow(QMainWindow):
 
         # Settings
         self.settings_obj = None
+        self.reverse = False
         self.line_break = 16
         self.separator = ""
         self.front_string = ""
         self.end_string = ""
+        self.grayscale_threshold = 128
 
         self.vbox_global = QVBoxLayout()
 
@@ -58,7 +60,7 @@ class MainWindow(QMainWindow):
         self.hbox_slider = QHBoxLayout()
         self.label_slider = QLabel("阈值")
         self.slider_thresh = QSlider(Qt.Orientation.Horizontal)
-        self.slider_thresh.setValue(128)
+        self.slider_thresh.setValue(self.grayscale_threshold)
         self.slider_thresh.setRange(0, 255)
 
         self.hbox_slider.addWidget(self.label_slider)
@@ -107,6 +109,7 @@ class MainWindow(QMainWindow):
 
     def refreshImagePreview(self):
         # Refresh the image preview label
+        self.image_processed = numpy2image(pretreatment(self.image, self.grayscale_threshold, self.reverse))
         image_preview_qpixmap = self.Image_to_ImageQt(self.image_processed)
         self.label_origin_img_preview.setPixmap(image_preview_qpixmap.scaledToHeight(self.label_origin_img_preview.height()))
 
@@ -117,7 +120,7 @@ class MainWindow(QMainWindow):
         for filename in file_names:
             if filename != '':
                 self.image = Image.open(filename)
-                self.image_processed = numpy2image(pretreatment(self.image, self.slider_thresh.value()))
+                
                 self.refreshImagePreview()
 
     def onSettingsButtonClicked(self):
@@ -132,11 +135,12 @@ class MainWindow(QMainWindow):
         # Generate the results
         if self.image:
             out_str = processImage(self.image, 
-                                self.slider_thresh.value(), 
+                                self.grayscale_threshold, 
                                 sep=self.separator, 
                                 line_break_num=self.line_break,
                                 front_str=self.front_string,
-                                end_str=self.end_string)
+                                end_str=self.end_string,
+                                reverse=self.reverse)
             self.text_output.setText(out_str)
         else:
             QMessageBox.warning(self, "警告", "没有选择图片")
@@ -149,17 +153,20 @@ class MainWindow(QMainWindow):
 
     def sliderValueChanged(self):
         # Refresh the image preview when the value of the slider is changed
+        self.grayscale_threshold = self.slider_thresh.value()
         if self.image:
-            self.image_processed = numpy2image(pretreatment(self.image, self.slider_thresh.value()))
             self.refreshImagePreview()
 
     def applySettings(self, settings_obj : QSettings):
         # Receive a QSettings object and apply
         self.settings_obj = settings_obj
+        self.reverse = bool(settings_obj.value("reverse"))
         self.line_break = int(settings_obj.value("line_break"))
         self.separator = settings_obj.value("separator")
         self.front_string = settings_obj.value("front_string")
         self.end_string = settings_obj.value("end_string")
+        if self.image:
+            self.refreshImagePreview()
 
 
         
