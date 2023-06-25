@@ -12,6 +12,7 @@ class SettingsManager:
         return self.settings_obj
 
     def generateDefaultSettings(self):
+        self.settings_obj.setValue("reverse", False)
         self.settings_obj.setValue("line_break", 16)
         self.settings_obj.setValue("separator", ", ")
         self.settings_obj.setValue("front_string", "")
