@@ -29,6 +29,10 @@ def processImage(ima : Image,
                  reverse : bool = False):
     # Print the image in the form of bytes
     im = pretreatment(ima, threshold, reverse)
+    if im.shape[1] % 8:
+        # Forced cropping of the image
+        width_residual = im.shape[1] % 8
+        im = numpy.delete(im, numpy.s_[(im.shape[1]-width_residual):], axis=1)
     out = []
     for row in im:
         # Traverse each row in the image
